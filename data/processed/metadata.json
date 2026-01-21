@@ -1,0 +1,26 @@
+[
+  {
+    "id": "flood_policy_2019",
+    "type": "text",
+    "department": "Emergency Management",
+    "date": "2019-06-15",
+    "outcome": "success",
+    "tags": ["flood", "policy"]
+  },
+  {
+    "id": "budget_cuts_2020",
+    "type": "text",
+    "department": "Finance",
+    "date": "2020-03-01",
+    "outcome": "failure",
+    "tags": ["budget", "training"]
+  },
+  {
+    "id": "flood_map_image",
+    "type": "image",
+    "department": "Emergency Management",
+    "date": "2019-06-15",
+    "outcome": "success",
+    "tags": ["flood", "map"]
+  }
+]

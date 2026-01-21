@@ -1,0 +1,18 @@
+[
+  {
+    "query": "Has a similar flood response policy been implemented before and what was the outcome?",
+    "expected_modalities": ["text"]
+  },
+  {
+    "query": "What lessons were learned from budget cuts in disaster preparedness?",
+    "expected_modalities": ["text"]
+  },
+  {
+    "query": "Show diagrams related to successful flood evacuation strategies",
+    "expected_modalities": ["image"]
+  },
+  {
+    "query": "How did cybersecurity training impact security incidents?",
+    "expected_modalities": ["text", "image"]
+  }
+]
