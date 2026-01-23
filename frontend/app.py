@@ -4,6 +4,32 @@ import json
 from PIL import Image
 import os
 from datetime import datetime
+from pypdf import PdfReader
+from docx import Document
+from io import BytesIO
+import re
+
+def extract_metadata_from_text(text):
+    metadata = {}
+
+    patterns = {
+        "department": r"Department:\s*(.*)",
+        "location": r"Location:\s*(.*)",
+        "outcome": r"Outcome:\s*(.*)",
+        "date": r"(Q[1-4]\s*\d{4})",
+        "document_type": r"(Policy|Report|Decision|Incident)"
+    }
+
+    for key, pattern in patterns.items():
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            metadata[key] = match.group(1).strip()
+
+    # Extract tags based on keywords
+    possible_tags = ["policy", "budget", "flood", "infrastructure", "emergency", "monitoring", "evacuation", "cybersecurity"]
+    metadata["tags"] = [tag for tag in possible_tags if tag in text.lower()]
+
+    return metadata
 
 API_BASE = "http://localhost:8000"
 
@@ -121,21 +147,62 @@ elif page == "Add Institutional Memory":
         col1, col2 = st.columns(2)
 
         with col1:
-            document_text = st.text_area("Document Text", height=200)
-            department = st.selectbox("Department", ["Emergency Management", "Finance", "Infrastructure", "Other"])
+            # File uploader for document upload
+            uploaded_file = st.file_uploader("Upload Document (optional)", type=["txt", "md", "pdf", "docx"], help="Upload a text file to autofill the document text field")
+            
+            if uploaded_file is not None:
+                try:
+                    file_bytes = uploaded_file.read()
+                    file_extension = uploaded_file.name.split('.')[-1].lower()
+                    
+                    if file_extension in ['txt', 'md']:
+                        uploaded_text = file_bytes.decode('utf-8')
+                    elif file_extension == 'pdf':
+                        pdf_file = BytesIO(file_bytes)
+                        reader = PdfReader(pdf_file)
+                        uploaded_text = ""
+                        for page in reader.pages:
+                            uploaded_text += page.extract_text() + "\n"
+                    elif file_extension == 'docx':
+                        docx_file = BytesIO(file_bytes)
+                        doc = Document(docx_file)
+                        uploaded_text = "\n".join([para.text for para in doc.paragraphs])
+                    else:
+                        raise ValueError("Unsupported file type")
+                    
+                    st.session_state['document_text'] = uploaded_text
+                    auto_metadata = extract_metadata_from_text(uploaded_text)
+                    st.session_state['auto_metadata'] = auto_metadata
+                    st.success(f"Document '{uploaded_file.name}' uploaded successfully! Text extracted and ready for editing.")
+                except Exception as e:
+                    st.error(f"Error reading file: {str(e)}")
+            
+            document_text = st.text_area("Document Text", value=st.session_state.get('document_text', ''), height=200)
+            department_options = ["Emergency Management", "Finance", "Infrastructure", "Other"]
+            extracted_dept = st.session_state.get('auto_metadata', {}).get("department", "")
+            dept_index = department_options.index(extracted_dept) if extracted_dept in department_options else 0
+            department = st.selectbox("Department", department_options, index=dept_index)
 
         with col2:
             date = st.date_input("Date")
-            outcome = st.selectbox("Outcome", ["success", "failure", "mixed"])
-            location = st.text_input("Location")
+            outcome_options = ["success", "failure", "mixed"]
+            extracted_outcome = st.session_state.get('auto_metadata', {}).get("outcome", "").lower()
+            outcome_index = outcome_options.index(extracted_outcome) if extracted_outcome in outcome_options else 0
+            outcome = st.selectbox("Outcome", outcome_options, index=outcome_index)
+            location = st.text_input("Location", value=st.session_state.get('auto_metadata', {}).get("location", ""))
 
-        tags_input = st.multiselect("Tags", ["policy", "budget", "flood", "infrastructure", "emergency", "monitoring", "evacuation", "cybersecurity"])
+        tags_options = ["policy", "budget", "flood", "infrastructure", "emergency", "monitoring", "evacuation", "cybersecurity"]
+        extracted_tags = st.session_state.get('auto_metadata', {}).get("tags", [])
+        tags_input = st.multiselect("Tags", tags_options, default=extracted_tags)
 
         st.subheader("Optional Information")
         col3, col4 = st.columns(2)
 
         with col3:
-            document_type = st.selectbox("Document Type", ["", "Policy", "Report", "Decision", "Incident"], index=0)
+            document_type_options = ["", "Policy", "Report", "Decision", "Incident"]
+            extracted_doc_type = st.session_state.get('auto_metadata', {}).get("document_type", "")
+            doc_type_index = document_type_options.index(extracted_doc_type) if extracted_doc_type in document_type_options else 0
+            document_type = st.selectbox("Document Type", document_type_options, index=doc_type_index)
             confidence = st.selectbox("Confidence Level", ["", "low", "medium", "high"], index=0)
 
         with col4:
@@ -157,7 +224,8 @@ elif page == "Add Institutional Memory":
                     "document_type": document_type if document_type else None,
                     "confidence": confidence if confidence else None,
                     "source": source if source else None,
-                    "notes": notes if notes else None
+                    "notes": notes if notes else None,
+                    "metadata_confidence": "auto-extracted"
                 }
 
                 with st.spinner("Ingesting text document..."):
@@ -188,6 +256,9 @@ elif page == "Add Institutional Memory":
 
             with col2:
                 location = st.text_input("Location")
+                outcome_options = ["success", "failure", "mixed"]
+                outcome_index = 0
+                outcome = st.selectbox("Outcome", outcome_options, index=outcome_index)
                 tags_input = st.multiselect("Tags", ["policy", "budget", "flood", "infrastructure", "emergency", "monitoring", "evacuation", "cybersecurity"])
 
             st.subheader("Optional Information")
@@ -207,15 +278,15 @@ elif page == "Add Institutional Memory":
                     with open(temp_path, "wb") as f:
                         f.write(uploaded_file.getbuffer())
 
-                    tags = tags_input if tags_input else None
-
                     payload = {
+                        "type": "image",
                         "image_path": temp_path,
                         "description": image_description,
                         "department": department,
                         "date": str(date),
+                        "outcome": outcome,
                         "location": location if location else None,
-                        "tags": tags,
+                        "tags": tags_input if tags_input else None,
                         "image_category": image_category if image_category else None,
                         "related_event": related_event if related_event else None,
                         "source": source if source else None,

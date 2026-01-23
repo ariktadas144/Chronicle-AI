@@ -12,7 +12,7 @@
     "expected_modalities": ["image"]
   },
   {
-    "query": "How did cybersecurity training impact security incidents?",
+    "query": "How did the new cybersecurity policy perform compared to earlier security practices?",
     "expected_modalities": ["text", "image"]
   }
 ]

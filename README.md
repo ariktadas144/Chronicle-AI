@@ -1,7 +1,7 @@
 # Chronicle AI
 ## True Multimodal Institutional Memory Agent for Public Systems
 
-Chronicle AI is an AI-powered institutional memory system that helps public organizations recall past decisions, policies, and outcomes over time — enabling evidence-based governance instead of repeating historical mistakes. Now featuring **true multimodal capabilities** with images as first-class citizens alongside text.
+Chronicle AI is an AI-powered institutional memory system that helps public organizations recall past decisions, policies, and outcomes over time enabling evidence-based governance instead of repeating historical mistakes. Now featuring **true multimodal capabilities** treating **text, images, and uploaded documents as first-class memory objects.**
 
 ## Problem Statement
 
@@ -30,9 +30,9 @@ Chronicle AI uses **CLIP-powered embeddings** and **Qdrant vector database** to 
 - Budget reviews (text)
 - Meeting notes (text)
 - Infrastructure updates (text)
-- **Historical images and diagrams (images)**
-- **Scanned documents and maps (images)**
-- **Visual evidence and charts (images)**
+- **Uploaded documents (PDF, DOCX, TXT, MD)**
+- **Historical images, diagrams, maps, and charts**
+- **Scanned policy documents and visual evidence**
 
 When a user asks a question (e.g., "Have we tried this policy before?"), Chronicle AI:
 
@@ -63,8 +63,10 @@ When a user asks a question (e.g., "Have we tried this policy before?"), Chronic
 ## System Architecture
 
 ```
-Raw Documents & Images (Reports, Notes, Decisions, Diagrams, Maps, Photos)
+Raw Inputs (Text Docs, PDFs, Word Files, Images, Maps, Diagrams)
         ↓
+Document Parsing + Image Processing  
+        ↓  
 CLIP Embedding Generation (ViT-B-32, 512D unified space)
         ↓
 Qdrant Vector Store
@@ -81,25 +83,39 @@ Evidence-Based Answer + Sources + Image References
 
 ## Key Multimodal Features
 
-### 🎯 True Multimodal Memory
-- **Single Vector Space**: CLIP embeds text and images in unified 512D space
-- **Cross-Modal Retrieval**: Text queries find relevant images and vice versa
+### True Multimodal Memory
+- **Single Vector Space**: CLIP embeds ext, images, and document-derived content
+- **Cross-Modal Retrieval**: (text → image, document → text)
 - **Visual Evidence Integration**: Reasoning explicitly references images (e.g., "2019 flood map shows...")
 - **First-Class Images**: Images are not attachments but core memory components
 
-### 🧠 Memory Evolution
+### True Multimodal Memory
+Chronicle AI supports **direct document uploads** via frontend and API:
+- **PDF**
+- **DOCX**
+- **TXT**
+- **MD**:
+On upload:
+1. Text is automatically extracted
+2. Metadata is inferred from content
+3. Fields are auto-filled for review
+4. User verifies or edits information
+5. Memory is stored with confidence tracking
+6. This prevents silent ingestion and memory corruption.
+
+### Memory Evolution
 - **Confidence Updates**: Memories gain/lose confidence as outcomes repeat
 - **Content Updates**: Re-embedding when text or images change
 - **Version Tracking**: Historical changes preserved in vector space
 - **Outcome Learning**: System improves recommendations over time
 
-### 📊 Observable Qdrant Operations
+### Observable Qdrant Operations
 - **Vector Dimensions Logged**: 512D CLIP embeddings tracked
 - **Similarity Scores**: Retrieval scores logged for transparency
 - **Collection Metrics**: Memory counts and types monitored
 - **Performance Tracking**: Query latency and accuracy metrics
 
-### 🔄 API Endpoints
+### API Endpoints
 - `POST /ingest` - Add text or image memories
 - `POST /query` - Multimodal retrieval with reasoning
 - `PUT /update/{memory_id}` - Evolve existing memories
@@ -187,25 +203,25 @@ Sources included in output with explicit image references.
 
 ## Key Features
 
-### 🎯 True Multimodal Memory
+### True Multimodal Memory
 - **Unified CLIP Space**: 512D embeddings for text and images
 - **Cross-Modal Retrieval**: Text queries find images, images provide context
 - **Visual Evidence**: Images explicitly referenced in reasoning
 - **First-Class Citizens**: Images are core memory components, not attachments
 
-### 🧠 Memory Evolution
+### Memory Evolution
 - **Confidence Tracking**: Memories update confidence based on outcome patterns
 - **Content Updates**: Automatic re-embedding when memories change
 - **Version History**: Tracks how institutional knowledge evolves
 - **Learning System**: Improves recommendations over time
 
-### 📊 Observable Qdrant Operations
+### Observable Qdrant Operations
 - **Vector Logging**: 512D dimensions, similarity scores, operation tracking
 - **Performance Metrics**: Query latency, retrieval accuracy, memory counts
 - **Collection Insights**: Multimodal distribution and storage efficiency
 - **Debug Visibility**: Transparent vector operations for validation
 
-### 🔄 Advanced Capabilities
+### Advanced Capabilities
 - **True long-term memory** (not chat history)
 - **Cross-year, cross-department reasoning**
 - **Evidence-grounded responses with visual citations**
@@ -415,7 +431,7 @@ response = requests.post("http://localhost:8000/query", json={
 
 This project demonstrates **true multimodal institutional memory**:
 
-### ✅ What We Built
+### What We Built
 - **CLIP-Powered Multimodal Embeddings**: Unified 512D vector space for text + images
 - **Single Qdrant Collection**: Efficient storage and retrieval of multimodal memories
 - **Cross-Modal Retrieval**: Text queries find relevant images and vice versa
@@ -423,13 +439,13 @@ This project demonstrates **true multimodal institutional memory**:
 - **Memory Evolution**: Update capabilities for confidence tracking and content changes
 - **Observable Operations**: Comprehensive logging of vector dimensions and similarity scores
 
-### 🎯 Judging Criteria Met
+### Judging Criteria Met
 - **"Clearly demonstrates multimodal"**: ✓ Text + images in unified CLIP space
 - **"Effective Multimodal Retrieval"**: ✓ Cross-modal search with proper scoring
 - **Qdrant integration**: ✓ Obvious and well-documented vector search role
 - **No complex pipelines**: ✓ Simple, clean CLIP + Qdrant implementation
 
-### 🧪 Verification
+### Verification
 Run `python test_multimodal.py` to verify:
 - CLIP embeddings working (512D vectors)
 - Text and image ingestion successful

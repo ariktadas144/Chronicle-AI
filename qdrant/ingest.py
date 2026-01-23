@@ -44,13 +44,17 @@ def ingest_single_document(text: Optional[str] = None, image_path: Optional[str]
     client = get_qdrant_client()
     payload = metadata.copy()
 
+    # Ensure required fields exist
+    payload["type"] = payload.get("type", "text" if text else "image")
+    payload["outcome"] = payload.get("outcome", "success")
+
     vector = None
-    if metadata.get("type") == "text" and text:
+    if payload["type"] == "text" and text:
         embedder = TextEmbedder()
         vector = embedder.embed(text)
         payload["text"] = text
         logger.info(f"Qdrant Ingest - Text embedding created, dimensions: {len(vector)}")
-    elif metadata.get("type") == "image" and image_path:
+    elif payload["type"] == "image" and image_path:
         embedder = ImageEmbedder()
         vector = embedder.embed(image_path)
         payload["image_url"] = image_path
@@ -61,7 +65,7 @@ def ingest_single_document(text: Optional[str] = None, image_path: Optional[str]
         raise ValueError("Invalid type or missing content")
 
     content = text if text else image_path
-    content_hash = hashlib.md5((content + str(metadata)).encode()).hexdigest()
+    content_hash = hashlib.md5((content + str(payload)).encode()).hexdigest()
     doc_id = int(content_hash[:16], 16)
 
     point = models.PointStruct(
@@ -71,8 +75,8 @@ def ingest_single_document(text: Optional[str] = None, image_path: Optional[str]
     )
 
     client.upsert(collection_name=collection_name, points=[point])
-    logger.info(f"Qdrant Ingest - Successfully stored {metadata['type']} in collection '{collection_name}' with ID {doc_id}")
-    print(f"Ingested {metadata['type']} into {collection_name} with ID {doc_id}")
+    logger.info(f"Qdrant Ingest - Successfully stored {payload['type']} in collection '{collection_name}' with ID {doc_id}")
+    print(f"Ingested {payload['type']} into {collection_name} with ID {doc_id}")
 
 def update_memory_document(memory_id: str, update_data: dict, collection_name="memories"):
     client = get_qdrant_client()
@@ -129,7 +133,7 @@ def ingest_images(images_dir="data/raw/images", collection_name="memories"):
                 "id": filename,
                 "department": "Unknown",
                 "date": "2024-01-01",
-                "outcome": "unknown",
+                "outcome": "success",
                 "type": "image",
                 "tags": []
             }
